@@ -19,7 +19,6 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
   }
   useEffect(()=>{
     obterDadosSalvos();
-    console.log('Dados adquiridos',DADOS);
   },[]);
 
   const salvarDados=async(item:any)=>{
@@ -34,16 +33,13 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
   }
 
   const handleAddLembrete=()=>{
-    console.log('=========ADICIONANDO LEMBRETE========');
     if(lembrete){
       const newDADOS=[{id:Date.now().toString(),lembrete},...DADOS];
-      console.log("Lembretes",newDADOS);
       setLembrete('');
       salvarDados(newDADOS);
     }
   }
   const handleExcluirLembrete=(id:any)=>{
-    console.log('xxxxxxxxx-EXCLUINDO LEMBRETE-xxxxxxxxxxxxx');
     try{
       const upadteDATA=DADOS.filter(item=>item.id !== id); 
       salvarDados(upadteDATA);   
