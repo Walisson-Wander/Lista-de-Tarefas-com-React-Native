@@ -1,16 +1,22 @@
 import React,{useEffect, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "react-native";
+import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList, useAnimatedValue} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
  const App=()=>{
   const [DADOS,setDados]=useState<any[]>([]);
   const [lembrete,setLembrete]=useState('');
+  const[currentLembrete,setCurrentLembrete]=useState<any>(null);
+  const[opcoesSub,setOpcoesSub]=useState<any>(null);
+  const [lembText,setLembText]=useState('');
+
   const obterDadosSalvos=async()=>{
     const chave = 'lembretes';
     try{
       const dadosJsonString = await AsyncStorage.getItem(chave);
       if(dadosJsonString){
         const dadosColetados=JSON.parse(dadosJsonString);
+        console.log(dadosColetados)
         setDados(dadosColetados);
       }
     }catch(error){
@@ -34,9 +40,25 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
 
   const handleAddLembrete=()=>{
     if(lembrete){
-      const newDADOS=[{id:Date.now().toString(),lembrete},...DADOS];
+      const newDADOS=[{id:Date.now().toString(),lembrete:lembrete,subList:[]},...DADOS];
       setLembrete('');
       salvarDados(newDADOS);
+    }
+  }
+  
+  const handleAddSublist=()=>{
+    
+    if(currentLembrete&&lembText!=''){
+      const updateLembrete=DADOS.map((item)=>
+        item.id===currentLembrete.id
+        ?{...item,subList:[...item.subList,opcoesSub+lembText]}
+        : item
+      );
+      setDados(updateLembrete);
+      console.log(updateLembrete);
+      setLembText('');
+      setOpcoesSub(null);
+      salvarDados(updateLembrete);
     }
   }
   const handleExcluirLembrete=(id:any)=>{
@@ -47,6 +69,7 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
       console.error('Não foi possivel excluir lembrete')
     }
   }
+  
   return(
     <View style={style.telaDeFundo}>
       <FlatList
@@ -54,23 +77,150 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
       keyExtractor={(item)=>item.id}
       renderItem={({item})=>(
         <TouchableOpacity
-        onPress={()=>handleExcluirLembrete(item.id)}
-        >
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginTop: 10,
-            width:330,
-            backgroundColor:'#fff',
-            minHeight:60,
-            borderRadius:20,
-            padding:10 
+        onPress={()=>{
+          if(currentLembrete!=item){
+            setOpcoesSub(null);
+            setLembText('');
+          };
+          setCurrentLembrete(item);
+        }}>
+          {currentLembrete===item?(
+            <View style={{
+              ...style.lembrete,
+              minHeight:100
             }}>
-            <Text style={{
-              fontSize:16
-            }}>{item.lembrete}</Text>
+              <View style={{flexDirection:'row-reverse'}}>
+                <TouchableOpacity onPress={()=>setCurrentLembrete(null)}>
+                  <FontAwesome name='close'style={{...style.closeButtons,backgroundColor:'#B3FF78',}}/>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>handleExcluirLembrete(item.id)}>
+                  <FontAwesome name='trash'style={{...style.closeButtons,backgroundColor:'#FF8F8F',}}/>
+                  
+                </TouchableOpacity>
+                
+              </View>
+              <Text style={{fontSize:18,marginVertical:15}}>{item.lembrete}</Text>
+              <FlatList
+              data={item.subList}
+              keyExtractor={(sublist,index)=>index.toString()}
+              renderItem={({item})=>
+                <View><Text style={{fontSize:14}}>{item.slice(3)}</Text></View>
+              }
+              >
+                
+              </FlatList>
+              {!opcoesSub?(
+                <TouchableOpacity
+                onPress={()=>setOpcoesSub(true)}
+                >
+                  <FontAwesome name="plus"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                </TouchableOpacity>
+              ):( 
+                <>
+                  {opcoesSub==='001'?(
+                    <>
+                      <TextInput 
+                        placeholder="Inserir Texto"
+                        onChangeText={text=>setLembText(text)}
+                        value={lembText}
+                        multiline={true}
+                        style={{margin:10}}
+                      />
+                      <View style={{flexDirection:'row-reverse'}}>
+                        <TouchableOpacity
+                        onPress={handleAddSublist}
+                        >
+                          <FontAwesome name="plus"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                        onPress={()=>{
+                          setOpcoesSub(null); 
+                          setLembText('');
+                        }}
+                        >
+                          <FontAwesome name="close"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                        </TouchableOpacity>
+                      </View>                    
+                    </>
+                  ):(
+                    <>
+                      {opcoesSub==='002'?(
+                        <>
+                        </>
+                      ):(
+                        <>
+                          {opcoesSub==='003'?(
+                            <>
+                              <TextInput 
+                                placeholder="Inserir Texto"
+                                onChangeText={text=>setLembText(text)}
+                                value={lembText}
+                                multiline={true}
+                                style={{margin:10}}
+                              />
+                              <View style={{flexDirection:'row-reverse'}}>
+                                <TouchableOpacity
+                                onPress={handleAddSublist}
+                                >
+                                  <FontAwesome name="plus"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                onPress={()=>{
+                                  setOpcoesSub(null); 
+                                  setLembText('');
+                                }}
+                                >
+                                  <FontAwesome name="close"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                                </TouchableOpacity>
+                              </View>                    
+                            </>
+                          ):(
+                            <>
+                              <View style={{flexDirection:'row'}}>
+                                <TouchableOpacity
+                                onPress={()=>setOpcoesSub(null)}
+                                >
+                                  <FontAwesome name="close"style={{...style.ciarLembretebuttonText,marginLeft:0}} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                onPress={()=>setOpcoesSub('001')}
+                                >
+                                  <FontAwesome name="align-left"style={{...style.ciarLembretebuttonText}} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                onPress={()=>setOpcoesSub('002')}
+                                >
+                                  <FontAwesome name="image" style={{...style.ciarLembretebuttonText}}/>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                onPress={()=>setOpcoesSub('003')}
+                                >
+                                  <FontAwesome name="list-ul" style={{...style.ciarLembretebuttonText}}/>
+                                </TouchableOpacity>
+                              </View>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </View>
+          ):(
+            <View style={{
+              ...style.lembrete
+              }}>
+              <Text style={{
+                
+                fontSize:17
+              }}>{item.lembrete}</Text>
+            </View>
+          )}
+          <View>
+
           </View>
+          
         </TouchableOpacity>
         
       )}
@@ -87,7 +237,7 @@ import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList} from "r
         onPress={handleAddLembrete}
         style={style.CriarLembreteButtonBox}
         >
-          <Text style={style.ciarLembretebuttonText}>+</Text>
+          <FontAwesome name="plus"style={{...style.ciarLembretebuttonText}} />
         </TouchableOpacity>
       </View>
     </View>
@@ -109,8 +259,8 @@ const style = StyleSheet.create({
   inserirLembreteBox:{
     position:'absolute',
     flexDirection:'row',
-    justifyContent:'space-between',
-    bottom:20
+    alignSelf:'center',
+    bottom:20,
   },
   lembreteTextInput:{
     elevation:10,
@@ -119,21 +269,38 @@ const style = StyleSheet.create({
     backgroundColor:'#fff',
     width:270,
     minHeight:60,
+    marginLeft:10
   },
   CriarLembreteButtonBox:{
     flexDirection:'column-reverse',
     height:'100%',
-    alignItems:'center',
   },
   ciarLembretebuttonText:{
     elevation:10,
     backgroundColor:'#fff',
     width:60,
     height:60,
-    margin:10,
     borderRadius:30,
-    fontSize:40,
-    textAlign:'center'
+    fontSize:25,
+    textAlign:'center',
+    textAlignVertical:'center',
+    marginHorizontal:10
+  },
+  lembrete:{
+    marginTop: 10,
+    width:330,
+    backgroundColor:'#fff',
+    minHeight:60,
+    borderRadius:20,
+    padding:15
+  },
+  closeButtons:{
+    width:30,
+    height:30,
+    marginRight:10,
+    borderRadius:15,
+    fontSize:24,textAlign:'center',
+    textAlignVertical:'center'
   }
 
 });
