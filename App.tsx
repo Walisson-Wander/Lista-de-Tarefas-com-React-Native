@@ -1,6 +1,6 @@
 import React,{useEffect, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList, useAnimatedValue} from "react-native";
+import { View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList, Button} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
  const App=()=>{
@@ -40,14 +40,14 @@ import { FontAwesome } from "@expo/vector-icons";
 
   const handleAddLembrete=()=>{
     if(lembrete){
-      const newDADOS=[{id:Date.now().toString(),lembrete:lembrete,subList:[]},...DADOS];
+      const newDADOS=[{id:Date.now().toString(),lembrete:lembrete},...DADOS];
       setLembrete('');
       salvarDados(newDADOS);
     }
   }
   
   const handleAddSublist=()=>{
-    
+    handleAddItem();
     if(currentLembrete&&lembText!=''){
       const updateLembrete=DADOS.map((item)=>
         item.id===currentLembrete.id
@@ -69,7 +69,35 @@ import { FontAwesome } from "@expo/vector-icons";
       console.error('Não foi possivel excluir lembrete')
     }
   }
+
+  //Corrigir o bug do item vazio
+  const handleAddItem = () => {
+    const itemIndex = DADOS.findIndex(item => item.id === currentLembrete.id);
+    if (itemIndex !== -1) {
+      const newData = [...DADOS];
+      if (!newData[itemIndex].subList) {
+        newData[itemIndex].subList = [];
+      }
+    }
+  };
+  const handleCheckBox = (texto: string) => {
+    const itemIndex = DADOS.findIndex(item => item.id === currentLembrete.id);
+    const newData = [...DADOS];
+    const subItemIndex = newData[itemIndex].subList.findIndex((item: string) => item.slice(3) === texto.slice(3));
   
+    if (subItemIndex !== -1) {
+      // Atualizar o primeiro dígito do item específico
+      newData[itemIndex].subList[subItemIndex] =
+        newData[itemIndex].subList[subItemIndex][0] === "0"
+          ? "1" + newData[itemIndex].subList[subItemIndex].slice(1)
+          : "0" + newData[itemIndex].subList[subItemIndex].slice(1);
+    }
+    console.log(newData[itemIndex].subList[subItemIndex]);
+    setDados(newData);
+    salvarDados(newData);
+  };
+  
+
   return(
     <View style={style.telaDeFundo}>
       <FlatList
@@ -84,7 +112,7 @@ import { FontAwesome } from "@expo/vector-icons";
           };
           setCurrentLembrete(item);
         }}>
-          {currentLembrete===item?(
+          {currentLembrete?.id===item.id?(
             <View style={{
               ...style.lembrete,
               minHeight:100
@@ -103,9 +131,39 @@ import { FontAwesome } from "@expo/vector-icons";
               <FlatList
               data={item.subList}
               keyExtractor={(sublist,index)=>index.toString()}
-              renderItem={({item})=>
-                <View><Text style={{fontSize:14}}>{item.slice(3)}</Text></View>
-              }
+              renderItem={({item})=>(
+                <>
+                  {item.slice(2,3)==='1'?(
+                  <>
+                  <Text>{item.slice(3)}</Text>
+                  </>
+                  ):(
+                    <>
+                      {item.slice(2,3)==='2'?(
+                        <>
+                        </>
+                      ):(
+                        <>
+                          {item.slice(2,3)==='3'?(
+                            <>
+                              <TouchableOpacity onPress={()=>handleCheckBox(item)}>
+                                <View style={{flexDirection:'row'}}>
+                                  <FontAwesome name={item.slice(0,1)==='0'?"square-o":"check-square-o"} size={20}/>
+                                  <Text>{item.slice(3)}</Text>
+                                </View>
+                              </TouchableOpacity>
+                            </>
+                          ):(
+                            <>
+                            
+                            </>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                </> 
+              )}
               >
                 
               </FlatList>
