@@ -1,10 +1,10 @@
 import React,{useEffect, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList, Image, SafeAreaView} from "react-native";
+import { Alert, View , StyleSheet, TextInput, Text, TouchableOpacity, FlatList, Image, SafeAreaView,StatusBar} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useCameraPermissions, launchCameraAsync,PermissionStatus } from "expo-image-picker";
 import * as ImagePicker from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
+//import * as MediaLibrary from 'expo-media-library';
 //import * as Permissions from 'expo-permissions';
  const App=()=>{
   const [DADOS,setDados]=useState<any[]>([]);
@@ -145,7 +145,7 @@ import * as MediaLibrary from 'expo-media-library';
     let result=await launchCameraAsync({
       allowsEditing:true,
       aspect:[4,3],
-      quality:0.5
+      quality:1,
     });
     if(!result.canceled&&result.assets[0].uri){
       setImage(result.assets[0].uri)
@@ -165,8 +165,11 @@ import * as MediaLibrary from 'expo-media-library';
   };
 
   return(
-    <SafeAreaView>
-      <View style={{...style.telaDeFundo,paddingBottom:!opcoesSub?120:0}}>
+    <SafeAreaView style={{}}>
+      <StatusBar
+        animated={true}
+      />
+      <View style={{...style.telaDeFundo,paddingBottom:!opcoesSub?98:0}}>
         <FlatList
         data={DADOS}
         keyExtractor={(item)=>item.id}
@@ -186,14 +189,14 @@ import * as MediaLibrary from 'expo-media-library';
                 minHeight:100
               }}>
                 <View style={{flexDirection:'row-reverse'}}>
-                  <TouchableOpacity onPress={()=>setCurrentTarefa(null)}>
+                  
+                  <TouchableOpacity onPress={()=>{setCurrentTarefa(null);setOpcoesSub(null)}}>
                     <FontAwesome name='close'style={{...style.closeButtons,backgroundColor:'#B3FF78',}}/>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={()=>handleExcluirtarefa(item.id)}>
+                  <TouchableOpacity onPress={()=>{handleExcluirtarefa(item.id);setOpcoesSub(null)}}>
                     <FontAwesome name='trash'style={{...style.closeButtons,backgroundColor:'#FF8F8F',}}/>
-                    
                   </TouchableOpacity>
-                  
+                  <Text style={{width:210}}>{new Date(parseInt(item.id)).toLocaleDateString()}</Text>
                 </View>
                 <Text style={{fontSize:18,marginVertical:15}}>{item.tarefa}</Text>
                 <FlatList
@@ -241,7 +244,6 @@ import * as MediaLibrary from 'expo-media-library';
                   </> 
                 )}
                 >
-                  
                 </FlatList>
                 {!opcoesSub?(
                   <TouchableOpacity
@@ -324,7 +326,6 @@ import * as MediaLibrary from 'expo-media-library';
                               </TouchableOpacity>
                             </View>
                             )}
-                                    
                           </>
                         ):(
                           <>
@@ -396,9 +397,6 @@ import * as MediaLibrary from 'expo-media-library';
                 }}>{item.tarefa}</Text>
               </View>
             )}
-            <View>
-
-            </View>
             
           </TouchableOpacity>
           
@@ -428,8 +426,8 @@ export default App;
 
 const style = StyleSheet.create({
   telaDeFundo:{
-    paddingTop:40,
-    paddingBottom:120,
+    paddingTop:0,
+    paddingBottom:0,
     width:'100%',
     height:'100%',
     backgroundColor:'#cce',
